@@ -1,6 +1,6 @@
 //go:build tools
 
-package app
+package tools
 
 import (
 	_ "github.com/mailru/easyjson"

@@ -22,6 +22,13 @@ type InvitesRoutes struct {
 	logger  zerolog.Logger
 }
 
+func NewInvitesRoutes(service InviteService, logger zerolog.Logger) *InvitesRoutes {
+	return &InvitesRoutes{
+		service: service,
+		logger:  logger,
+	}
+}
+
 func (r *InvitesRoutes) RegisterRoutes(e *gin.RouterGroup) {
 	e.POST("/invitation", r.acceptInvite)
 }
@@ -39,7 +46,7 @@ func (r *InvitesRoutes) acceptInvite(c *gin.Context) {
 		InvitedVia: m.Code,
 	})
 	if err != nil {
-		r.logger.Err(err).Str("email", m.Email).Str("code", m.Code).
+		r.logger.Debug().Err(err).Str("email", m.Email).Str("code", m.Code).
 			Msg("failed to accept invite")
 		switch {
 		case errors.Is(err, entity.ErrAlreadyExists):
@@ -53,11 +60,4 @@ func (r *InvitesRoutes) acceptInvite(c *gin.Context) {
 	}
 
 	c.Status(http.StatusOK)
-}
-
-func NewInvitesRoutes(service InviteService, logger zerolog.Logger) *InvitesRoutes {
-	return &InvitesRoutes{
-		service: service,
-		logger:  logger,
-	}
 }

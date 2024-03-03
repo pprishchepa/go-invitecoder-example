@@ -2,26 +2,29 @@ package postgres_test
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/pprishchepa/go-invitecoder-example/internal/entity"
+	"github.com/pprishchepa/go-invitecoder-example/internal/pkg/pgxmigrator"
 	"github.com/pprishchepa/go-invitecoder-example/internal/storage/postgres"
-	"github.com/pprishchepa/go-invitecoder-example/migrations/stats"
+	"github.com/pprishchepa/go-invitecoder-example/migrations/dbstats"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 )
 
-func TestInviteStatsStorage(t *testing.T) {
-
+func TestStatsStorage(t *testing.T) {
 	t.Parallel()
 
 	db, teardownDB := setupTestPostgres(t)
 	defer func() { teardownDB() }()
 
-	require.NoError(t, stats.Migrate(db.Config().ConnString()))
+	migrator := pgxmigrator.NewMigrator(zerolog.New(os.Stdout))
+	require.NoError(t, migrator.Up(db, dbstats.FS))
 
 	const maxVal = 2
 	ctx := context.Background()
-	storage := postgres.NewInviteStatsStorage(db)
+	storage := postgres.NewStatsStorage(db)
 
 	require.NoError(t, storage.IncByCode(ctx, "foo", maxVal))
 	require.NoError(t, storage.IncByCode(ctx, "bar", maxVal))

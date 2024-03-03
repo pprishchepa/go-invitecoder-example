@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
+	"github.com/pprishchepa/go-invitecoder-example/internal/pkg/integtest"
 	"github.com/stretchr/testify/require"
 )
 

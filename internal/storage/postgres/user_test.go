@@ -2,13 +2,16 @@ package postgres_test
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pprishchepa/go-invitecoder-example/internal/entity"
-	"github.com/pprishchepa/go-invitecoder-example/internal/pkg/pgxsharded"
+	"github.com/pprishchepa/go-invitecoder-example/internal/pkg/pgxcluster"
+	"github.com/pprishchepa/go-invitecoder-example/internal/pkg/pgxmigrator"
 	"github.com/pprishchepa/go-invitecoder-example/internal/storage/postgres"
-	"github.com/pprishchepa/go-invitecoder-example/migrations/user"
+	"github.com/pprishchepa/go-invitecoder-example/migrations/dbstats"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 )
 
@@ -24,13 +27,14 @@ func TestUserStorage(t *testing.T) {
 		teardownDB3()
 	}()
 
-	require.NoError(t, user.Migrate(db1.Config().ConnString()))
-	require.NoError(t, user.Migrate(db2.Config().ConnString()))
-	require.NoError(t, user.Migrate(db3.Config().ConnString()))
+	migrator := pgxmigrator.NewMigrator(zerolog.New(os.Stdout))
+	require.NoError(t, migrator.Up(db1, dbstats.FS))
+	require.NoError(t, migrator.Up(db2, dbstats.FS))
+	require.NoError(t, migrator.Up(db3, dbstats.FS))
 
 	ctx := context.Background()
-	cluster := pgxsharded.NewCluster([]*pgxpool.Pool{db1, db2, db3})
-	storage := postgres.NewInvitedUserStorage(cluster)
+	cluster := pgxcluster.NewCluster([]*pgxpool.Pool{db1, db2, db3})
+	storage := postgres.NewUserStorage(cluster)
 
 	err := storage.SaveUser(ctx, entity.InvitedUser{Email: "foo@example.com", InvitedVia: "twitter"})
 	require.NoError(t, err)

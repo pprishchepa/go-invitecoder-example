@@ -7,6 +7,7 @@ import (
 	httpctrl "github.com/pprishchepa/go-invitecoder-example/internal/controller/http"
 	httpv1 "github.com/pprishchepa/go-invitecoder-example/internal/controller/http/v1"
 	"github.com/pprishchepa/go-invitecoder-example/internal/pkg/fxlog"
+	"github.com/pprishchepa/go-invitecoder-example/internal/storage/postgres"
 	"github.com/pprishchepa/go-invitecoder-example/internal/usecase"
 	"github.com/rs/zerolog"
 	"go.uber.org/automaxprocs/maxprocs"
@@ -21,21 +22,22 @@ func New() *fx.App {
 			newLogger,
 		),
 		fx.Provide(
+			newDBStatsClient,
+			newDBUserClient,
+			newStatsStorage,
+			newUserStorage,
 			usecase.NewInviteService,
-			func(v *usecase.InviteService) httpv1.InviteService { return v },
-		),
-		fx.Provide(
-			newHTTPServer,
 			httpv1.NewInvitesRoutes,
 			httpctrl.NewRouter,
+			newHTTPServer,
+			func(v *usecase.InviteService) httpv1.InviteService { return v },
+			func(v *postgres.StatsStorage) usecase.StatsStorage { return v },
+			func(v *postgres.UserStorage) usecase.UserStorage { return v },
 		),
 		fx.WithLogger(newZerologAdapter),
 		fx.Invoke(automaxprocs),
-		fx.Invoke(performMigrations),
+		fx.Invoke(migrate),
 		fx.Invoke(func(*http.Server) {}),
-		fx.Invoke(func(logger zerolog.Logger) {
-			logger.Info().Msg("app started")
-		}),
 	)
 }
 

@@ -53,14 +53,14 @@ func (l ZerologAdapter) LogEvent(event fxevent.Event) {
 }
 
 func (l ZerologAdapter) onStartExecuting(e *fxevent.OnStartExecuting) {
-	l.Debug().Str("callee", e.FunctionName).Str("caller", e.CallerName).Msg("OnStart hook executing")
+	l.Info().Str("callee", e.FunctionName).Str("caller", e.CallerName).Msg("OnStart hook executing")
 }
 
 func (l ZerologAdapter) onStartExecuted(e *fxevent.OnStartExecuted) {
 	if e.Err != nil {
 		l.Err(e.Err).Str("callee", e.FunctionName).Str("caller", e.CallerName).Msg("OnStart hook failed")
 	} else {
-		l.Debug().Str("callee", e.FunctionName).
+		l.Info().Str("callee", e.FunctionName).
 			Str("caller", e.CallerName).
 			Str("runtime", e.Runtime.String()).
 			Msg("OnStart hook executed")
@@ -68,14 +68,14 @@ func (l ZerologAdapter) onStartExecuted(e *fxevent.OnStartExecuted) {
 }
 
 func (l ZerologAdapter) onStopExecuting(e *fxevent.OnStopExecuting) {
-	l.Debug().Str("callee", e.FunctionName).Str("caller", e.CallerName).Msg("OnStop hook executing")
+	l.Info().Str("callee", e.FunctionName).Str("caller", e.CallerName).Msg("OnStop hook executing")
 }
 
 func (l ZerologAdapter) onStopExecuted(e *fxevent.OnStopExecuted) {
 	if e.Err != nil {
 		l.Err(e.Err).Str("callee", e.FunctionName).Str("caller", e.CallerName).Msg("OnStop hook failed")
 	} else {
-		l.Debug().Str("callee", e.FunctionName).Str("caller", e.CallerName).Str("runtime", e.Runtime.String()).
+		l.Info().Str("callee", e.FunctionName).Str("caller", e.CallerName).Str("runtime", e.Runtime.String()).
 			Msg("OnStop hook executed")
 	}
 }
@@ -85,13 +85,13 @@ func (l ZerologAdapter) supplied(e *fxevent.Supplied) {
 		l.Err(e.Err).Str("type", e.TypeName).Str("module", e.ModuleName).
 			Msg("error encountered while applying options")
 	} else {
-		l.Debug().Str("type", e.TypeName).Str("module", e.ModuleName).Msg("supplied")
+		l.Info().Str("type", e.TypeName).Str("module", e.ModuleName).Msg("supplied")
 	}
 }
 
 func (l ZerologAdapter) provided(e *fxevent.Provided) {
 	for _, typ := range e.OutputTypeNames {
-		l.Debug().Str("constructor", e.ConstructorName).
+		l.Info().Str("constructor", e.ConstructorName).
 			Str("module", e.ModuleName).
 			Str("type", typ).
 			Bool("private", e.Private).
@@ -104,7 +104,7 @@ func (l ZerologAdapter) provided(e *fxevent.Provided) {
 
 func (l ZerologAdapter) replaced(e *fxevent.Replaced) {
 	for _, typ := range e.OutputTypeNames {
-		l.Debug().Str("module", e.ModuleName).Str("type", typ).Msg("replaced")
+		l.Info().Str("module", e.ModuleName).Str("type", typ).Msg("replaced")
 	}
 	if e.Err != nil {
 		l.Err(e.Err).Str("module", e.ModuleName).Msg("error encountered while replacing")
@@ -113,7 +113,7 @@ func (l ZerologAdapter) replaced(e *fxevent.Replaced) {
 
 func (l ZerologAdapter) decorated(e *fxevent.Decorated) {
 	for _, typ := range e.OutputTypeNames {
-		l.Debug().Str("decorator", e.DecoratorName).Str("module", e.ModuleName).Str("type", typ).Msg("decorated")
+		l.Info().Str("decorator", e.DecoratorName).Str("module", e.ModuleName).Str("type", typ).Msg("decorated")
 	}
 	if e.Err != nil {
 		l.Err(e.Err).Str("module", e.ModuleName).Msg("error encountered while applying options")
@@ -121,7 +121,7 @@ func (l ZerologAdapter) decorated(e *fxevent.Decorated) {
 }
 
 func (l ZerologAdapter) invoking(e *fxevent.Invoking) {
-	l.Debug().Str("function", e.FunctionName).Str("module", e.ModuleName).Msg("invoking")
+	l.Info().Str("function", e.FunctionName).Str("module", e.ModuleName).Msg("invoking")
 }
 
 func (l ZerologAdapter) invoked(e *fxevent.Invoked) {
@@ -132,7 +132,7 @@ func (l ZerologAdapter) invoked(e *fxevent.Invoked) {
 }
 
 func (l ZerologAdapter) stopping(e *fxevent.Stopping) {
-	l.Debug().Str("signal", strings.ToUpper(e.Signal.String())).
+	l.Info().Str("signal", strings.ToUpper(e.Signal.String())).
 		Msg("received signal")
 }
 
@@ -156,7 +156,7 @@ func (l ZerologAdapter) started(e *fxevent.Started) {
 	if e.Err != nil {
 		l.Err(e.Err).Msg("start failed")
 	} else {
-		l.Debug().Msg("started")
+		l.Info().Msg("started")
 	}
 }
 
@@ -164,6 +164,6 @@ func (l ZerologAdapter) loggerInitialized(e *fxevent.LoggerInitialized) {
 	if e.Err != nil {
 		l.Err(e.Err).Msg("custom logger initialization failed")
 	} else {
-		l.Debug().Str("function", e.ConstructorName).Msg("initialized custom fxevent.Logger")
+		l.Info().Str("function", e.ConstructorName).Msg("initialized custom fxevent.Logger")
 	}
 }

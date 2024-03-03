@@ -8,17 +8,21 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/pprishchepa/go-invitecoder-example/internal/entity"
 	"github.com/pprishchepa/go-invitecoder-example/internal/pkg/hashing"
-	"github.com/pprishchepa/go-invitecoder-example/internal/pkg/pgxsharded"
+	"github.com/pprishchepa/go-invitecoder-example/internal/pkg/pgxcluster"
 )
 
 // see https://www.postgresql.org/docs/current/errcodes-appendix.html
 const errorCodeUniqueViolation = "23505"
 
-type InviteUserStorage struct {
-	cluster *pgxsharded.Cluster
+type UserStorage struct {
+	cluster *pgxcluster.Cluster
 }
 
-func (s InviteUserStorage) SaveUser(ctx context.Context, user entity.InvitedUser) error {
+func NewUserStorage(cluster *pgxcluster.Cluster) *UserStorage {
+	return &UserStorage{cluster: cluster}
+}
+
+func (s UserStorage) SaveUser(ctx context.Context, user entity.InvitedUser) error {
 	shardID := hashing.HashStringKey(user.Email, s.cluster.Size())
 
 	db, err := s.cluster.GetShard(int(shardID))
@@ -36,8 +40,4 @@ func (s InviteUserStorage) SaveUser(ctx context.Context, user entity.InvitedUser
 	}
 
 	return nil
-}
-
-func NewInvitedUserStorage(cluster *pgxsharded.Cluster) *InviteUserStorage {
-	return &InviteUserStorage{cluster: cluster}
 }

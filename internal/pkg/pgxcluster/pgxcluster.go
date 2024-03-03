@@ -1,7 +1,7 @@
-package pgxsharded
+package pgxcluster
 
 import (
-	"errors"
+	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -22,7 +22,7 @@ func (c *Cluster) Size() int {
 
 func (c *Cluster) GetShard(index int) (*pgxpool.Pool, error) {
 	if index < 0 || index >= len(c.shards) {
-		return nil, errors.New("shard index out of range")
+		return nil, fmt.Errorf("get shard: index out of range: %d", index)
 	}
 
 	return c.shards[index], nil

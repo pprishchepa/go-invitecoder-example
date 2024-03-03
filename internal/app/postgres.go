@@ -1,104 +1,81 @@
 package app
 
 import (
-	"errors"
+	"context"
 	"fmt"
 	"net"
-	"net/url"
 	"strconv"
+	"strings"
 
-	"github.com/golang-migrate/migrate/v4"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pprishchepa/go-invitecoder-example/internal/config"
-	"github.com/pprishchepa/go-invitecoder-example/migrations/stats"
-	"golang.org/x/sync/errgroup"
+	"github.com/pprishchepa/go-invitecoder-example/internal/pkg/pgxcluster"
+	"go.uber.org/fx"
 )
 
-func performMigrations(conf config.Config) error {
-	var eg errgroup.Group
+type (
+	dbstatsPool struct {
+		*pgxpool.Pool
+	}
+	dbusersCluster struct {
+		*pgxcluster.Cluster
+	}
+)
 
-	eg.Go(func() error {
-		if err := migratePgCounters(conf); err != nil && !errors.Is(err, migrate.ErrNoChange) {
-			return fmt.Errorf("migrate counters: %w", err)
-		}
-		return nil
-	})
-
-	eg.Go(func() error {
-		if err := migratePgEmails01(conf); err != nil && !errors.Is(err, migrate.ErrNoChange) {
-			return fmt.Errorf("migrate emails01: %w", err)
-		}
-		return nil
-	})
-
-	eg.Go(func() error {
-		if err := migratePgEmails02(conf); err != nil && !errors.Is(err, migrate.ErrNoChange) {
-			return fmt.Errorf("migrate emails02: %w", err)
-		}
-		return nil
-	})
-
-	eg.Go(func() error {
-		if err := migratePgEmails03(conf); err != nil && !errors.Is(err, migrate.ErrNoChange) {
-			return fmt.Errorf("migrate emails03: %w", err)
-		}
-		return nil
-	})
-
-	return eg.Wait()
-}
-
-func migratePgCounters(conf config.Config) error {
-	connURL := &url.URL{
-		Scheme: "postgres",
-		User:   url.UserPassword(conf.PgCounters.User, conf.PgCounters.Password),
-		Host:   net.JoinHostPort(conf.PgCounters.Host, strconv.Itoa(conf.PgCounters.Port)),
-		Path:   conf.PgCounters.Database,
-		RawQuery: url.Values{
-			"sslmode": []string{conf.PgCounters.SSLMode},
-		}.Encode(),
+func newDBStatsClient(lc fx.Lifecycle, conf config.Config) (*dbstatsPool, error) {
+	db, err := newPostgresClient(conf.DBStats)
+	if err != nil {
+		hostname := net.JoinHostPort(conf.DBStats.Host, strconv.Itoa(conf.DBStats.Port))
+		return nil, fmt.Errorf("new dbstats client (%s): %w", hostname, err)
 	}
 
-	return stats.Migrate(connURL.String())
+	lc.Append(fx.StopHook(func() {
+		db.Close()
+	}))
+
+	return &dbstatsPool{db}, nil
 }
 
-func migratePgEmails01(conf config.Config) error {
-	connURL := &url.URL{
-		Scheme: "postgres",
-		User:   url.UserPassword(conf.PgEmails01.User, conf.PgEmails01.Password),
-		Host:   net.JoinHostPort(conf.PgEmails01.Host, strconv.Itoa(conf.PgEmails01.Port)),
-		Path:   conf.PgEmails01.Database,
-		RawQuery: url.Values{
-			"sslmode": []string{conf.PgEmails01.SSLMode},
-		}.Encode(),
+func newDBUserClient(lc fx.Lifecycle, conf config.Config) (*dbusersCluster, error) {
+	const dbusersShards = 3
+
+	shards := make([]*pgxpool.Pool, 0, dbusersShards)
+
+	for _, shardConf := range []config.Postgres{
+		conf.DBUsers01,
+		conf.DBUsers02,
+		conf.DBUsers03,
+	} {
+		db, err := newPostgresClient(shardConf)
+		if err != nil {
+			hostname := net.JoinHostPort(shardConf.Host, strconv.Itoa(shardConf.Port))
+			return nil, fmt.Errorf("new dbusers client (%s): %w", hostname, err)
+		}
+		lc.Append(fx.StopHook(func() {
+			db.Close()
+		}))
+		shards = append(shards, db)
 	}
 
-	return invitee.Migrate(connURL.String())
+	return &dbusersCluster{pgxcluster.NewCluster(shards)}, nil
 }
 
-func migratePgEmails02(conf config.Config) error {
-	connURL := &url.URL{
-		Scheme: "postgres",
-		User:   url.UserPassword(conf.PgEmails02.User, conf.PgEmails02.Password),
-		Host:   net.JoinHostPort(conf.PgEmails02.Host, strconv.Itoa(conf.PgEmails02.Port)),
-		Path:   conf.PgEmails02.Database,
-		RawQuery: url.Values{
-			"sslmode": []string{conf.PgEmails02.SSLMode},
-		}.Encode(),
+func newPostgresClient(conf config.Postgres) (*pgxpool.Pool, error) {
+	connString := strings.Join([]string{
+		"user=" + conf.User,
+		"password=" + conf.Password,
+		"dbname=" + conf.Database,
+		"host=" + conf.Host,
+		"port=" + fmt.Sprintf("%d", conf.Port),
+		"sslmode=" + conf.SSLMode,
+		"connect_timeout=" + fmt.Sprintf("%d", conf.ConnTimeout),
+		"pool_max_conns=" + fmt.Sprintf("%d", conf.MaxConn),
+	}, " ")
+
+	db, err := pgxpool.New(context.Background(), connString)
+	if err != nil {
+		return nil, fmt.Errorf("init pgxpool: %w", err)
 	}
 
-	return invitee.Migrate(connURL.String())
-}
-
-func migratePgEmails03(conf config.Config) error {
-	connURL := &url.URL{
-		Scheme: "postgres",
-		User:   url.UserPassword(conf.PgEmails03.User, conf.PgEmails03.Password),
-		Host:   net.JoinHostPort(conf.PgEmails03.Host, strconv.Itoa(conf.PgEmails03.Port)),
-		Path:   conf.PgEmails03.Database,
-		RawQuery: url.Values{
-			"sslmode": []string{conf.PgEmails03.SSLMode},
-		}.Encode(),
-	}
-
-	return invitee.Migrate(connURL.String())
+	return db, nil
 }

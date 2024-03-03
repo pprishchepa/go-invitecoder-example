@@ -34,7 +34,9 @@ func New() *fx.App {
 			func(v *postgres.StatsStorage) usecase.StatsStorage { return v },
 			func(v *postgres.UserStorage) usecase.UserStorage { return v },
 		),
-		fx.WithLogger(newZerologAdapter),
+		fx.WithLogger(func(logger zerolog.Logger) fxevent.Logger {
+			return fxlog.NewZerologAdapter(logger.With().Str("logger", "fx").Logger())
+		}),
 		fx.Invoke(automaxprocs),
 		fx.Invoke(migrate),
 		fx.Invoke(func(*http.Server) {}),
@@ -43,11 +45,7 @@ func New() *fx.App {
 
 func automaxprocs(logger zerolog.Logger) error {
 	_, err := maxprocs.Set(maxprocs.Logger(func(s string, i ...interface{}) {
-		logger.Debug().Str("logger", "automaxprocs").Msgf(s, i...)
+		logger.Info().Str("logger", "automaxprocs").Msgf(s, i...)
 	}))
 	return err
-}
-
-func newZerologAdapter(logger zerolog.Logger) fxevent.Logger {
-	return fxlog.NewZerologAdapter(logger.With().Str("logger", "fx").Logger())
 }

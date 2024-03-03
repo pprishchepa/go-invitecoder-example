@@ -10,7 +10,7 @@ import (
 	"github.com/pprishchepa/go-invitecoder-example/internal/pkg/pgxcluster"
 	"github.com/pprishchepa/go-invitecoder-example/internal/pkg/pgxmigrator"
 	"github.com/pprishchepa/go-invitecoder-example/internal/storage/postgres"
-	"github.com/pprishchepa/go-invitecoder-example/migrations/dbstats"
+	"github.com/pprishchepa/go-invitecoder-example/migrations/dbusers"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 )
@@ -28,9 +28,9 @@ func TestUserStorage(t *testing.T) {
 	}()
 
 	migrator := pgxmigrator.NewMigrator(zerolog.New(os.Stdout))
-	require.NoError(t, migrator.Up(db1, dbstats.FS))
-	require.NoError(t, migrator.Up(db2, dbstats.FS))
-	require.NoError(t, migrator.Up(db3, dbstats.FS))
+	require.NoError(t, migrator.Up(db1, dbusers.FS))
+	require.NoError(t, migrator.Up(db2, dbusers.FS))
+	require.NoError(t, migrator.Up(db3, dbusers.FS))
 
 	ctx := context.Background()
 	cluster := pgxcluster.NewCluster([]*pgxpool.Pool{db1, db2, db3})

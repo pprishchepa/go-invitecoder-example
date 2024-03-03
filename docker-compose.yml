@@ -1,0 +1,60 @@
+version: "3.9"
+
+services:
+  db-counters:
+    image: postgres:15.2-alpine
+    environment:
+      POSTGRES_USER: ${PG_COUNTERS_USER}
+      POSTGRES_PASSWORD: ${PG_COUNTERS_PASSWORD}
+      POSTGRES_DB: ${PG_COUNTERS_DB}
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    ports:
+      - "127.0.0.1:55000:5432"
+    volumes:
+      - db-stats-data:/var/lib/postgresql/data
+
+  db-emails-01:
+    image: postgres:15.2-alpine
+    environment:
+      POSTGRES_USER: ${PG_EMAILS_01_USER}
+      POSTGRES_PASSWORD: ${PG_EMAILS_01_PASSWORD}
+      POSTGRES_DB: ${PG_EMAILS_01_DB}
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    ports:
+      - "127.0.0.1:55101:5432"
+    volumes:
+      - db-emails-01-data:/var/lib/postgresql/data
+
+  db-emails-02:
+    image: postgres:15.2-alpine
+    environment:
+      POSTGRES_USER: ${PG_EMAILS_02_USER}
+      POSTGRES_PASSWORD: ${PG_EMAILS_02_PASSWORD}
+      POSTGRES_DB: ${PG_EMAILS_02_DB}
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    ports:
+      - "127.0.0.1:55102:5432"
+    volumes:
+      - db-emails-02-data:/var/lib/postgresql/data
+
+  db-emails-03:
+    image: postgres:15.2-alpine
+    environment:
+      POSTGRES_USER: ${PG_EMAILS_02_USER}
+      POSTGRES_PASSWORD: ${PG_EMAILS_02_PASSWORD}
+      POSTGRES_DB: ${PG_EMAILS_02_DB}
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    ports:
+      - "127.0.0.1:55103:5432"
+    volumes:
+      - db-emails-03-data:/var/lib/postgresql/data
+
+volumes:
+  db-counters-data:
+  db-emails-01-data:
+  db-emails-02-data:
+  db-emails-03-data:

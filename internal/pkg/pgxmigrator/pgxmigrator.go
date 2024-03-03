@@ -35,6 +35,11 @@ func (m Migrator) Up(db *pgxpool.Pool, fs embed.FS) error {
 	if err != nil {
 		return fmt.Errorf("init migrator: %s: %w", hostname, err)
 	}
+	defer func() {
+		if _, err := mg.Close(); err != nil {
+			m.logger.Err(err).Str("dbhost", hostname).Msg("could not close migrator")
+		}
+	}()
 
 	m.logger.Info().Str("dbhost", hostname).Msg("migrating...")
 
@@ -58,11 +63,10 @@ func (m Migrator) newInstance(db *pgxpool.Pool, fs embed.FS) (*migrate.Migrate, 
 	}
 
 	stdDB := stdlib.OpenDBFromPool(db)
-	defer func() { _ = stdDB.Close() }()
 
 	expBackoff := backoff.NewExponentialBackOff()
 	expBackoff.InitialInterval = 2 * time.Second
-	expBackoff.MaxInterval = 10 * time.Second
+	expBackoff.MaxInterval = 5 * time.Second
 	expBackoff.MaxElapsedTime = 5 * time.Minute
 
 	var driver database.Driver

@@ -5,7 +5,6 @@ import (
 	"net"
 	"net/url"
 	"os"
-	"strconv"
 
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
@@ -37,18 +36,5 @@ func GetHostPort(res *dockertest.Resource, portID string) (host string, port str
 	}
 
 	port = res.GetPort(portID)
-	return
-}
-
-func GetHostPortInt(res *dockertest.Resource, portID string) (host string, port int) {
-	var rawPort string
-	host, rawPort = GetHostPort(res, portID)
-
-	var err error
-	if port, err = strconv.Atoi(rawPort); err != nil {
-		log.Fatalf("convert port %s to int: %s", rawPort, err)
-		return
-	}
-
 	return
 }

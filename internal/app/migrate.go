@@ -18,11 +18,11 @@ func migrate(statsDB *dbstatsPool, usersDB *dbusersCluster, logger zerolog.Logge
 	})
 
 	for i := 0; i < usersDB.Size(); i++ {
+		db, err := usersDB.GetShard(i)
+		if err != nil {
+			return err
+		}
 		eg.Go(func() error {
-			db, err := usersDB.GetShard(i)
-			if err != nil {
-				return err
-			}
 			return mg.Up(db, dbusers.FS)
 		})
 	}

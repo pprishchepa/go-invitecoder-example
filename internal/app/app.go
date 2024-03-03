@@ -43,11 +43,11 @@ func New() *fx.App {
 
 func automaxprocs(logger zerolog.Logger) error {
 	_, err := maxprocs.Set(maxprocs.Logger(func(s string, i ...interface{}) {
-		logger.Debug().Msgf(s, i...)
+		logger.Debug().Str("logger", "automaxprocs").Msgf(s, i...)
 	}))
 	return err
 }
 
 func newZerologAdapter(logger zerolog.Logger) fxevent.Logger {
-	return fxlog.NewZerologAdapter(logger)
+	return fxlog.NewZerologAdapter(logger.With().Str("logger", "fx").Logger())
 }

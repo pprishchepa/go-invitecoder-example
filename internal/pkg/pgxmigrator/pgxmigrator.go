@@ -23,7 +23,9 @@ type Migrator struct {
 }
 
 func NewMigrator(logger zerolog.Logger) *Migrator {
-	return &Migrator{logger: logger}
+	return &Migrator{
+		logger: logger.With().Str("logger", "Migrator").Logger(),
+	}
 }
 
 func (m Migrator) Up(db *pgxpool.Pool, fs embed.FS) error {

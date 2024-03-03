@@ -34,7 +34,7 @@ func NewInviteService(conf config.Config, stats StatsStorage, users UserStorage,
 		conf:   conf,
 		stats:  stats,
 		users:  users,
-		logger: logger,
+		logger: logger.With().Str("logger", "InviteService").Logger(),
 	}
 }
 

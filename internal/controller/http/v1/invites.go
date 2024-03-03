@@ -25,7 +25,7 @@ type InvitesRoutes struct {
 func NewInvitesRoutes(service InviteService, logger zerolog.Logger) *InvitesRoutes {
 	return &InvitesRoutes{
 		service: service,
-		logger:  logger,
+		logger:  logger.With().Str("logger", "InvitesRoutes").Logger(),
 	}
 }
 

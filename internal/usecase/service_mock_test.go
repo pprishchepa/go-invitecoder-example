@@ -40,6 +40,20 @@ func (m *MockStatsStorage) EXPECT() *MockStatsStorageMockRecorder {
 	return m.recorder
 }
 
+// DecByCode mocks base method.
+func (m *MockStatsStorage) DecByCode(ctx context.Context, code string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DecByCode", ctx, code)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DecByCode indicates an expected call of DecByCode.
+func (mr *MockStatsStorageMockRecorder) DecByCode(ctx, code any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DecByCode", reflect.TypeOf((*MockStatsStorage)(nil).DecByCode), ctx, code)
+}
+
 // IncByCode mocks base method.
 func (m *MockStatsStorage) IncByCode(ctx context.Context, code string, maxVal int) error {
 	m.ctrl.T.Helper()

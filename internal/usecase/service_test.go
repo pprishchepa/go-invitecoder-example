@@ -7,6 +7,7 @@ import (
 	"github.com/pprishchepa/go-invitecoder-example/internal/config"
 	"github.com/pprishchepa/go-invitecoder-example/internal/entity"
 	"github.com/pprishchepa/go-invitecoder-example/internal/usecase"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -25,7 +26,7 @@ func TestInviteService(t *testing.T) {
 	stats := NewMockStatsStorage(mockCtrl)
 	users := NewMockUserStorage(mockCtrl)
 
-	svc := usecase.NewInviteService(conf, stats, users)
+	svc := usecase.NewInviteService(conf, stats, users, zerolog.Nop())
 
 	stats.EXPECT().IncByCode(ctx, "twitter", 1000).Return(nil)
 	users.EXPECT().SaveUser(ctx, entity.InvitedUser{Email: "foo@example.com", InvitedVia: "twitter"}).Return(nil)

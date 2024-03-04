@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/pprishchepa/go-invitecoder-example/internal/config"
@@ -43,13 +42,11 @@ func (s *InviteService) AcceptInvite(ctx context.Context, user entity.InvitedUse
 		return fmt.Errorf("inc by code: %w", err)
 	}
 
-	if err := s.users.SaveUser(ctx, user); err != nil {
-		if errors.Is(err, entity.ErrAlreadyExists) {
-			if err := s.stats.DecByCode(ctx, user.InvitedVia); err != nil {
-				s.logger.Err(err).Msg("could not rollback stats increment")
-			}
+	if saveErr := s.users.SaveUser(ctx, user); saveErr != nil {
+		if decErr := s.stats.DecByCode(ctx, user.InvitedVia); decErr != nil {
+			s.logger.Err(decErr).Msg("could not rollback stats increment")
 		}
-		return fmt.Errorf("save user: %w", err)
+		return fmt.Errorf("save user: %w", saveErr)
 	}
 
 	return nil

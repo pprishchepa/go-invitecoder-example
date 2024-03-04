@@ -46,16 +46,18 @@ func (r *InvitesRoutes) acceptInvite(c *gin.Context) {
 		InvitedVia: m.Code,
 	})
 	if err != nil {
-		r.logger.Debug().Err(err).Str("email", m.Email).Str("code", m.Code).
-			Msg("failed to accept invite")
-		switch {
-		case errors.Is(err, entity.ErrAlreadyExists):
+		if errors.Is(err, entity.ErrAlreadyExists) {
+			r.logger.Debug().Str("email", m.Email).Str("code", m.Code).Msg("user with the same email already exists")
 			c.Status(http.StatusConflict)
-		case errors.Is(err, entity.ErrNotAvailable):
-			c.Status(http.StatusGone)
-		default:
-			c.Status(http.StatusInternalServerError)
+			return
 		}
+		if errors.Is(err, entity.ErrNotAvailable) {
+			r.logger.Debug().Str("email", m.Email).Str("code", m.Code).Msg("no invitation available")
+			c.Status(http.StatusGone)
+			return
+		}
+		r.logger.Err(err).Str("email", m.Email).Str("code", m.Code).Msg("failed to accept invite")
+		c.Status(http.StatusInternalServerError)
 		return
 	}
 

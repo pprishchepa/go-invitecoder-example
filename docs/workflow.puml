@@ -1,0 +1,19 @@
+@startuml
+autonumber
+
+actor user as "User"
+participant goservice as "Go Service"
+database dbstats
+database dbusersXX
+
+user -> goservice: POST /v1/invitation (Code, Email)
+activate goservice
+
+goservice -> dbstats: Increment counter by Code
+goservice -> goservice: Calc ShardKey by Email
+goservice -> dbusersXX: Store Email using ShardKey
+
+user <-- goservice: OK
+deactivate goservice
+
+@enduml

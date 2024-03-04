@@ -1,0 +1,28 @@
+@startuml
+
+frame OLTP  #line.dashed {
+  usecase goservice as "Go Service"
+  database dbstats
+  database dbusers {
+    database dbusers01
+    database dbusers02
+    database dbusers03
+  }
+  database dbusers01_standby
+  database dbusers02_standby
+  database dbusers03_standby
+}
+
+database dbstats_copy
+
+goservice --> dbstats
+goservice --> dbusers01
+goservice --> dbusers02
+goservice --> dbusers03
+
+dbstats ..>  dbstats_copy: "async repl."
+dbusers01 -->  dbusers01_standby: "syn repl."
+dbusers02 -->  dbusers02_standby: "syn repl."
+dbusers03 -->  dbusers03_standby: "syn repl."
+
+@enduml
